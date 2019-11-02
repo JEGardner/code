@@ -2,141 +2,26 @@
  * Build styles
  */
 require("./index.css").toString();
-
+var SlimSelect = require("slim-select");
 /**
- * CodeTool for Editor.js
+ * @class Quote
+ * @classdesc Quote Tool for Editor.js
+ * @property {QuoteData} data - Tool`s input and output data
+ * @propert {object} api - Editor.js API instance
  *
- * @author CodeX (team@ifmo.su)
- * @copyright CodeX 2018
- * @license The MIT License (MIT)
- * @version 2.0.0
+ * @typedef {object} QuoteData
+ * @description Quote Tool`s input and output data
+ * @property {string} text - quote`s text
+ * @property {string} caption - quote`s caption
+ * @property {'center'|'left'} alignment - quote`s alignment
+ *
+ * @typedef {object} QuoteConfig
+ * @description Quote Tool`s initial configuration
+ * @property {string} quotePlaceholder - placeholder to show in quote`s text input
+ * @property {string} captionPlaceholder - placeholder to show in quote`s caption input
+ * @property {'center'|'left'} defaultAlignment - alignment to use as default
  */
-
-class CodeTool {
-  /**
-   * Allow to press Enter inside the CodeTool textarea
-   * @returns {boolean}
-   * @public
-   */
-  static get enableLineBreaks() {
-    return true;
-  }
-
-  /**
-   * @typedef {Object} CodeData — plugin saved data
-   * @param {String} code - previously saved plugin code
-   */
-
-  /**
-   * Render plugin`s main Element and fill it with saved data
-   *
-   * @param {CodeData} data — previously saved plugin code
-   * @param {Object} config - user config for Tool
-   * @param {Object} api - Editor.js API
-   */
-  constructor({ data, config, api }) {
-    this.api = api;
-
-    this.placeholder = config.placeholder || CodeTool.DEFAULT_PLACEHOLDER;
-    this.languageArray = config.languageArray;
-    this.CSS = {
-      baseClass: this.api.styles.block,
-      input: this.api.styles.input,
-      // select: this.api.styles.select,
-      wrapper: "ce-code",
-      textarea: "ce-code__textarea"
-    };
-
-    this.nodes = {
-      holder: null,
-      select: null,
-      textarea: null
-    };
-
-    this.data = {
-      code: data.code || ""
-    };
-
-    this.nodes.holder = this.drawView();
-  }
-
-  /**
-   * Create Tool's view
-   * @return {HTMLElement}
-   * @private
-   */
-  drawView() {
-    let wrapper = document.createElement("div"),
-      textarea = document.createElement("textarea"),
-      select = this._make(this.languageArray);
-
-    wrapper.classList.add(this.CSS.baseClass, this.CSS.wrapper);
-    textarea.classList.add(this.CSS.textarea, this.CSS.input);
-    // select.classList.add(this.CSS.select);
-    textarea.textContent = this.data.code;
-
-    textarea.placeholder = this.placeholder;
-    wrapper.appendChild(select);
-    wrapper.appendChild(textarea);
-
-    this.nodes.textarea = textarea;
-
-    return wrapper;
-  }
-
-  /**
-   * Return Tool's view
-   * @returns {HTMLDivElement} this.nodes.holder - Code's wrapper
-   * @public
-   */
-  render() {
-    return this.nodes.holder;
-  }
-
-  /**
-   * Extract Tool's data from the view
-   * @param {HTMLDivElement} codeWrapper - CodeTool's wrapper, containing textarea with code
-   * @returns {CodeData} - saved plugin code
-   * @public
-   */
-  save(codeWrapper) {
-    return {
-      language: codeWrapper.querySelector("select").value,
-      code: codeWrapper.querySelector("textarea").value
-    };
-  }
-
-  /**
-   * onPaste callback fired from Editor`s core
-   * @param {PasteEvent} event - event with pasted content
-   */
-  onPaste(event) {
-    const content = event.detail.data;
-    this.data = {
-      code: content.textContent
-    };
-  }
-
-  /**
-   * Returns Tool`s data from private property
-   * @return {*}
-   */
-  get data() {
-    return this._data;
-  }
-
-  /**
-   * Set Tool`s data to private property and update view
-   * @param {CodeData} data
-   */
-  set data(data) {
-    this._data = data;
-
-    if (this.nodes.textarea) {
-      this.nodes.textarea.textContent = data.code;
-    }
-  }
-
+class CustomCode {
   /**
    * Get Tool toolbox settings
    * icon - Tool icon's SVG
@@ -152,25 +37,122 @@ class CodeTool {
   }
 
   /**
-   * Default placeholder for CodeTool's textarea
+   * Empty Quote is not empty Block
+   * @public
+   * @returns {boolean}
+   */
+  static get contentless() {
+    return true;
+  }
+
+  /**
+   * Allow to press Enter inside the Quote
+   * @public
+   * @returns {boolean}
+   */
+  static get enableLineBreaks() {
+    return true;
+  }
+
+  /**
+   * Default placeholder for quote caption
    *
    * @public
    * @returns {string}
    */
-  static get DEFAULT_PLACEHOLDER() {
-    return "Enter code";
+  // static get DEFAULT_CAPTION_PLACEHOLDER() {
+  //   return "Enter a caption";
+  // }
+
+  /**
+   * Tool`s styles
+   *
+   * @returns {{baseClass: string, wrapper: string, quote: string, input: string, caption: string, settingsButton: string, settingsButtonActive: string}}
+   */
+  get CSS() {
+    return {
+      baseClass: this.api.styles.block,
+      input: this.api.styles.input,
+      wrapper: "ce-code",
+      textarea: "ce-code__textarea"
+    };
+  }
+  static get sanitize() {
+    return {
+      input: {
+        br: true
+      }
+    };
+  }
+  /**
+   * Tool`s settings properties
+   *
+   * @returns {*[]}
+   */
+
+  /**
+   * Render plugin`s main Element and fill it with saved data
+   *
+   * @param {{data: QuoteData, config: QuoteConfig, api: object}}
+   *   data — previously saved data
+   *   config - user config for Tool
+   *   api - Editor.js API
+   */
+  constructor({ data, config, api }) {
+    // const { ALIGNMENTS, DEFAULT_ALIGNMENT } = Quote;
+    this.select = null;
+    this.api = api;
+    this.language = config.languageArray;
+    // this.quotePlaceholder =
+
+    // this.captionPlaceholder =
+    this.data = {
+      code: data.code || "",
+      language: data.language || ""
+    };
   }
 
   /**
-   *  Used by Editor.js paste handling API.
-   *  Provides configuration to handle CODE tag.
+   * Create Quote Tool container with inputs
    *
-   * @static
-   * @return {{tags: string[]}}
+   * @returns {Element}
    */
-  static get pasteConfig() {
+  render() {
+    const container = this._make("div", [this.CSS.baseClass, this.CSS.wrapper]);
+    const code = this._make("div", [this.CSS.textarea], {
+      contentEditable: true,
+      innerHTML: this.data.code
+    });
+    const select = this._makeSelect(this.language);
+
+    container.appendChild(code);
+    container.appendChild(select);
+    this.select = new SlimSelect({
+      select: select,
+      showContent: "down", // 'auto', 'up' or 'down'
+      showSearch: false
+    });
+    return container;
+  }
+  onPaste(event) {
+    const content = event.detail.data;
+    this.data = {
+      code: content.textContent
+    };
+  }
+  /**
+   * Extract Quote data from Quote Tool element
+   *
+   * @param {HTMLDivElement} quoteElement - element to save
+   * @returns {QuoteData}
+   */
+  save(quoteElement) {
+    const code = quoteElement.querySelector(`.${this.CSS.textarea}`);
+    // console.log(this.select.se);
+    // const select = quoteElement.getElementsByTagName(`select`);
     return {
-      tags: ["pre"]
+      code: code.innerHTML,
+      language: this.select.selected()
     };
   }
 
@@ -182,20 +164,22 @@ class CodeTool {
    * @param  {Object} attributes        - any attributes
    * @return {Element}
    */
-  _make(array, className) {
-    //Create and append select list
-    let el = document.createElement("select");
 
-    //Create and append the options
+  _makeSelect(array) {
+    // let el = document.createElement("div");
+    // el.classList.add("custom-select");
+    let select = document.createElement("select");
+
     for (let i = 0; i < array.length; i++) {
       let option = document.createElement("option");
       //add style in future
       option.value = array[i];
       option.text = array[i];
-      el.appendChild(option);
+      select.appendChild(option);
     }
-    return el;
+    return select;
+    // el.appendChild(select);
   }
 }
 
-module.exports = CodeTool;
+module.exports = CustomCode;
