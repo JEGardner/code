@@ -152,7 +152,7 @@ class CustomCode {
     // const select = quoteElement.getElementsByTagName(`select`);
     return {
       code: code.innerHTML,
-      language: this.select.selected()
+      language: this.select.selected().toLowerCase()
     };
   }
 
