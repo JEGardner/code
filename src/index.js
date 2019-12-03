@@ -131,6 +131,7 @@ class CustomCode {
       showContent: "down", // 'auto', 'up' or 'down'
       showSearch: false
     });
+    this.select.set(this.data.language)
     return container;
   }
   onPaste(event) {
@@ -150,7 +151,7 @@ class CustomCode {
     // console.log(this.select.se);
     // const select = quoteElement.getElementsByTagName(`select`);
     return {
-      code: code.textContent,
+      code: code.value,
       language: this.select.selected().toLowerCase()
     };
   }
