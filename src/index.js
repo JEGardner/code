@@ -148,11 +148,9 @@ class CustomCode {
    */
   save(quoteElement) {
     const code = quoteElement.querySelector(`.${this.CSS.textarea}`);
-    // console.log(this.select.se);
-    // const select = quoteElement.getElementsByTagName(`select`);
     return {
       code: code.value,
-      language: this.select.selected().toLowerCase()
+      language: this.select.selected() ? this.select.selected().toLowerCase() : ""
     };
   }
 
@@ -173,8 +171,8 @@ class CustomCode {
     for (let i = 0; i < array.length; i++) {
       let option = document.createElement("option");
       //add style in future
-      option.value = array[i];
-      option.text = array[i];
+      option.value = array[i].value;
+      option.text = array[i].title;
       select.appendChild(option);
     }
     return select;
